@@ -1,0 +1,38 @@
+﻿@page "/pocket/view/{pocketName}"
+@using System.Net.Http.Json
+@inject HttpClient httpClient
+
+<PageTitle>View Pocket - @PocketName</PageTitle>
+
+@code {
+    [Parameter]
+    public string PocketName { get; set; }
+
+    private bool _loading = true;
+    private LogRowsResponse Data;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Data = await httpClient.GetFromJsonAsync<LogRowsResponse>($"pockets/{PocketName}/logs");
+        _loading = false;
+    }
+}
+
+<h1>Pocket - @PocketName</h1>
+
+<MudTable Items="@Data.Rows" Hover="true" Loading="@_loading" LoadingProgressColor="Color.Info">
+    <HeaderContent>
+        <MudTh>Timestamp</MudTh>
+        @foreach(var column in Data.Columns)
+        {
+            <MudTh>@column</MudTh>
+        }
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Timestamp">@context.Timestamp.ToLocalTime().ToString()</MudTd>
+        @foreach (var column in Data.Columns)
+        {
+            <MudTd DataLabel="@column">@context.Data[column]</MudTd>
+        }
+    </RowTemplate>
+</MudTable>

@@ -12,6 +12,8 @@ namespace LogBag.Services
     public interface IMongoService
     {
         IMongoCollection<BsonDocument> GetCollection(string pocket);
+
+        Task<IEnumerable<string>> GetCollectionNames();
     }
 
     public class MongoService : IMongoService
@@ -23,6 +25,12 @@ namespace LogBag.Services
         {
             _configuration = configuration;
             _client = new MongoClient(_configuration.GetConnectionString("LogDB"));
+        }
+
+        public async Task<IEnumerable<string>> GetCollectionNames()
+        {
+            var collections = await _client.GetDatabase(_configuration["MongoDB:DatabaseName"]).ListCollectionNamesAsync();
+            return await collections.ToListAsync();
         }
 
         public IMongoCollection<BsonDocument> GetCollection(string pocket)

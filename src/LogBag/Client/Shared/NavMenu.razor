@@ -1,7 +1,21 @@
-﻿<MudNavMenu>
+﻿@inject HttpClient HttpClient
+
+<MudNavMenu>
     <MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
     <MudNavGroup Title="Pockets" Expanded="true">
-        <MudNavLink Href="/users" Match="NavLinkMatch.Prefix">Users</MudNavLink>
-        <MudNavLink Href="/security" Match="NavLinkMatch.Prefix">Security</MudNavLink>
+        @foreach(var pocket in pockets)
+        {
+            var url = $"/pocket/view/{pocket}";
+            <MudNavLink Href=@url Match="NavLinkMatch.Prefix">@pocket</MudNavLink>
+        }
     </MudNavGroup>
 </MudNavMenu>
+
+@code {
+    List<string> pockets = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        pockets = await HttpClient.GetFromJsonAsync<List<string>>("pockets") ?? new List<string>();
+    }
+}

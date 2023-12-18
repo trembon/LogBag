@@ -8,7 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 //builder.Services.AddRazorPages();
 
-builder.Services.AddTransient<IAddLogsService, AddLogsService>();
+builder.Services.AddTransient<ILogsService, LogsService>();
+builder.Services.AddTransient<IPocketService, PocketService>();
 builder.Services.AddSingleton<IMongoService, MongoService>();
 
 var app = builder.Build();

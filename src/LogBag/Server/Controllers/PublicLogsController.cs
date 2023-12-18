@@ -10,9 +10,9 @@ namespace LogBag.Server.Controllers
     [Route("api/logs")]
     public class PublicLogsController : ControllerBase
     {
-        private readonly IAddLogsService _addLogsService;
+        private readonly ILogsService _addLogsService;
 
-        public PublicLogsController(IAddLogsService addLogsService)
+        public PublicLogsController(ILogsService addLogsService)
         {
             _addLogsService = addLogsService;
         }

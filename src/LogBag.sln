@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogBag.Server", "LogBag\Server\LogBag.Server.csproj", "{481A8D25-C1DF-46CB-840F-2042B06FD3FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogBag.Server", "LogBag\Server\LogBag.Server.csproj", "{481A8D25-C1DF-46CB-840F-2042B06FD3FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogBag.Client", "LogBag\Client\LogBag.Client.csproj", "{B2C02174-4DD0-4C7E-81A1-1EEF85B2085B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogBag.Client", "LogBag\Client\LogBag.Client.csproj", "{B2C02174-4DD0-4C7E-81A1-1EEF85B2085B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogBag.Shared", "LogBag\Shared\LogBag.Shared.csproj", "{BDDD4470-0FCF-40A8-8A5E-18E965C4AD90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogBag.Shared", "LogBag\Shared\LogBag.Shared.csproj", "{BDDD4470-0FCF-40A8-8A5E-18E965C4AD90}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogBag.Services", "LogBag.Services\LogBag.Services.csproj", "{1AE0F7ED-681D-4D52-AC5D-B62A44580C49}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogBag.Services", "LogBag.Services\LogBag.Services.csproj", "{1AE0F7ED-681D-4D52-AC5D-B62A44580C49}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
