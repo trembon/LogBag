@@ -6,33 +6,56 @@
 
 @code {
     [Parameter]
-    public string PocketName { get; set; }
+    public string? PocketName { get; set; }
 
-    private bool _loading = true;
-    private LogRowsResponse Data;
+    private PocketMetadataResponse? Metadata;
 
     protected override async Task OnInitializedAsync()
     {
-        Data = await httpClient.GetFromJsonAsync<LogRowsResponse>($"pockets/{PocketName}/logs");
-        _loading = false;
+        Metadata = await httpClient.GetFromJsonAsync<PocketMetadataResponse>($"pockets/{PocketName}");
+    }
+
+    private async Task<TableData<LogRowResponse>> GetLogsData(TableState state)
+    {
+        var pageNumber = state.Page == 0 ? 1 : state.Page;
+        var url = $"logs/{PocketName}?page={pageNumber}&pageSize={state.PageSize}";
+
+        var response = await httpClient.GetFromJsonAsync<List<LogRowResponse>>(url);
+
+        return new TableData<LogRowResponse>
+        {
+            TotalItems = (int?)Metadata?.TotalLogCount ?? 0,
+            Items = response ?? Enumerable.Empty<LogRowResponse>()
+        };
     }
 }
 
-<h1>Pocket - @PocketName</h1>
+<h1 class="mb-5">Pocket - @PocketName</h1>
 
-<MudTable Items="@Data.Rows" Hover="true" Loading="@_loading" LoadingProgressColor="Color.Info">
+<MudTable T="LogRowResponse" Hover="true" LoadingProgressColor="Color.Info" ServerData="GetLogsData">
     <HeaderContent>
         <MudTh>Timestamp</MudTh>
-        @foreach(var column in Data.Columns)
+        @if (Metadata is not null)
         {
-            <MudTh>@column</MudTh>
+            foreach (var column in Metadata.Columns)
+            {
+                <MudTh>@column
+                </MudTh>
+            }
+
         }
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Timestamp">@context.Timestamp.ToLocalTime().ToString()</MudTd>
-        @foreach (var column in Data.Columns)
+        <MudTd DataLabel="Timestamp">@context.Timestamp.ToString("u")</MudTd>
+        @if (Metadata is not null)
         {
-            <MudTd DataLabel="@column">@context.Data[column]</MudTd>
+            foreach (var column in Metadata.Columns)
+            {
+                <MudTd DataLabel="@column">@context.Data[column]</MudTd>
+            }
         }
     </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
 </MudTable>

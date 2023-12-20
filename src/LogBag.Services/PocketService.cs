@@ -12,7 +12,7 @@ namespace LogBag.Services
     {
         Task<IEnumerable<string>> GetPocketNames();
 
-        Task<List<string>> GetColumns(string pocket);
+        Task<List<string>> GetColumns(string pocket, CancellationToken cancellationToken);
     }
 
     public class PocketService(IMongoService mongoService) : IPocketService
@@ -22,10 +22,10 @@ namespace LogBag.Services
             return await mongoService.GetCollectionNames();
         }
 
-        public async Task<List<string>> GetColumns(string pocket)
+        public async Task<List<string>> GetColumns(string pocket, CancellationToken cancellationToken)
         {
             var filter = Builders<BsonDocument>.Filter.Empty;
-            var row = await mongoService.GetCollection(pocket).Find(filter).Limit(1).SingleAsync();
+            var row = await mongoService.GetCollection(pocket).Find(filter).Limit(1).SingleAsync(cancellationToken);
 
             var dictionary = row.ToDictionary();
 

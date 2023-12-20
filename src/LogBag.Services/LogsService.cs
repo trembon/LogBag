@@ -14,7 +14,9 @@ namespace LogBag.Services
     {
         Task<string?> AddLogItem(string pocket, string itemJson, CancellationToken cancellationToken);
 
-        Task<List<LogRowResponse>> GetLogs(string pocket, CancellationToken cancellationToken);
+        Task<long> GetLogCount(string pocket, CancellationToken cancellationToken);
+
+        Task<List<LogRowResponse>> GetLogs(string pocket, int page, int pageSize, CancellationToken cancellationToken);
     }
 
     public class LogsService(IMongoService mongoService) : ILogsService
@@ -37,7 +39,14 @@ namespace LogBag.Services
             }
         }
 
-        public async Task<List<LogRowResponse>> GetLogs(string pocket, CancellationToken cancellationToken)
+        public async Task<long> GetLogCount(string pocket, CancellationToken cancellationToken)
+        {
+            var filter = Builders<BsonDocument>.Filter.Empty;
+            long count = await mongoService.GetCollection(pocket).CountDocumentsAsync(filter, null, cancellationToken);
+            return count;
+        }
+
+        public async Task<List<LogRowResponse>> GetLogs(string pocket, int page, int pageSize, CancellationToken cancellationToken)
         {
             var collection = mongoService.GetCollection(pocket);
 
@@ -46,21 +55,22 @@ namespace LogBag.Services
 
             var rows = await collection.FindAsync(filter, new FindOptions<BsonDocument, BsonDocument>()
             {
-                Sort = sort
+                Sort = sort,
+                BatchSize = pageSize,
+                Skip = (page - 1) * pageSize
             }, cancellationToken);
 
+            await rows.MoveNextAsync(cancellationToken);
+
             List<LogRowResponse> result = [];
-            while (await rows.MoveNextAsync(cancellationToken))
+            foreach (var row in rows.Current)
             {
-                foreach (var row in rows.Current)
+                result.Add(new LogRowResponse
                 {
-                    result.Add(new LogRowResponse
-                    {
-                        Id = row.GetValue(ID_COLUMN).AsObjectId.ToString(),
-                        Timestamp = row.GetValue(TIMESTAMP_COLUMN).AsBsonDateTime.ToUniversalTime(),
-                        Data = row.ToDictionary()
-                    });
-                }
+                    Id = row.GetValue(ID_COLUMN).AsObjectId.ToString(),
+                    Timestamp = row.GetValue(TIMESTAMP_COLUMN).AsBsonDateTime.ToUniversalTime(),
+                    Data = row.ToDictionary()
+                });
             }
 
             return result;

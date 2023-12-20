@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace LogBag.Shared.Models
 {
-    public class LogRowsResponse
+    public class PocketMetadataResponse
     {
         public required List<string> Columns { get; set; }
 
-        public required List<LogRowResponse> Rows { get; set; }
+        public long TotalLogCount { get; set; }
     }
 }

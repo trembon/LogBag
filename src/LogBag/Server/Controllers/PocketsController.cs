@@ -8,22 +8,23 @@ namespace LogBag.Server.Controllers
     [Route("api/internal/pockets")]
     public class PocketsController(IPocketService pocketService, ILogsService logsService) : Controller
     {
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public async Task<IActionResult> ListPocketNames()
         {
             var pocketNames = await pocketService.GetPocketNames();
             return Ok(pocketNames);
         }
 
-        [HttpGet("{pocket}/logs")]
-        public async Task<IActionResult> GetLogs(string pocket, CancellationToken cancellationToken = default)
+        [HttpGet("{pocket}")]
+        public async Task<IActionResult> GetPocketMetadata(string pocket, CancellationToken cancellationToken = default)
         {
-            var columns = await pocketService.GetColumns(pocket);
-            var logRows = await logsService.GetLogs(pocket, cancellationToken);
+            var columns = await pocketService.GetColumns(pocket, cancellationToken);
+            var logCount = await logsService.GetLogCount(pocket, cancellationToken);
 
-            return Ok(new LogRowsResponse
+            return Ok(new PocketMetadataResponse
             {
                 Columns = columns,
-                Rows = logRows
+                TotalLogCount = logCount
             });
         }
     }
