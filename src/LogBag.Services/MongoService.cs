@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace LogBag.Services
 {
@@ -14,6 +15,8 @@ namespace LogBag.Services
         IMongoCollection<BsonDocument> GetCollection(string pocket);
 
         Task<IEnumerable<string>> GetCollectionNames();
+
+        Task CreateIndex(string collectionName, string column, bool descending, CancellationToken cancellationToken);
     }
 
     public class MongoService : IMongoService
@@ -33,9 +36,20 @@ namespace LogBag.Services
             return await collections.ToListAsync();
         }
 
-        public IMongoCollection<BsonDocument> GetCollection(string pocket)
+        public IMongoCollection<BsonDocument> GetCollection(string name)
         {
-            return _client.GetDatabase(_configuration["MongoDB:DatabaseName"]).GetCollection<BsonDocument>(pocket);
+            return _client.GetDatabase(_configuration["MongoDB:DatabaseName"]).GetCollection<BsonDocument>(name);
+        }
+
+        public async Task CreateIndex(string collectionName, string column, bool descending, CancellationToken cancellationToken)
+        {
+            var collection = GetCollection(collectionName);
+
+            var indexDefinition = Builders<BsonDocument>.IndexKeys.Ascending(column);
+            if(descending)
+                indexDefinition = Builders<BsonDocument>.IndexKeys.Descending(column);
+
+            await collection.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(indexDefinition), new CreateOneIndexOptions(), cancellationToken);
         }
     }
 }

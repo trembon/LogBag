@@ -12,6 +12,8 @@ builder.Services.AddTransient<ILogsService, LogsService>();
 builder.Services.AddTransient<IPocketService, PocketService>();
 builder.Services.AddSingleton<IMongoService, MongoService>();
 
+builder.Services.AddHostedService<VerifyIndexesBackgroundService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
