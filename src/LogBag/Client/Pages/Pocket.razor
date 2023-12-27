@@ -1,8 +1,8 @@
-﻿@page "/pocket/view/{pocketName}"
-@using System.Net.Http.Json
+﻿@page "/pocket/{pocketName}/logs"
 @inject HttpClient httpClient
+@inject NavigationManager Navigation
 
-<PageTitle>View Pocket - @PocketName</PageTitle>
+<PageTitle>LogBag - View Pocket (@PocketName)</PageTitle>
 
 @code {
     [Parameter]
@@ -28,21 +28,24 @@
             Items = response ?? Enumerable.Empty<LogRowResponse>()
         };
     }
+
+    private void RowClicked(TableRowClickEventArgs<LogRowResponse> p)
+    {
+        Navigation.NavigateTo($"/pocket/{PocketName}/logs/{p.Item.Id}");
+    }
 }
 
 <h1 class="mb-5">Pocket - @PocketName</h1>
 
-<MudTable T="LogRowResponse" Hover="true" LoadingProgressColor="Color.Info" ServerData="GetLogsData">
+<MudTable T="LogRowResponse" Hover="true" LoadingProgressColor="Color.Info" ServerData="GetLogsData" OnRowClick="RowClicked">
     <HeaderContent>
         <MudTh>Timestamp</MudTh>
         @if (Metadata is not null)
         {
             foreach (var column in Metadata.Columns)
             {
-                <MudTh>@column
-                </MudTh>
+                <MudTh>@column</MudTh>
             }
-
         }
     </HeaderContent>
     <RowTemplate>

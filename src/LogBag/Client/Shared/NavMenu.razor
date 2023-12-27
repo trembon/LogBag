@@ -5,7 +5,7 @@
     <MudNavGroup Title="Pockets" Expanded="true">
         @foreach(var pocket in pockets)
         {
-            var url = $"/pocket/view/{pocket}";
+            var url = $"/pocket/{pocket}/logs";
             <MudNavLink Href=@url Match="NavLinkMatch.Prefix">@pocket</MudNavLink>
         }
     </MudNavGroup>

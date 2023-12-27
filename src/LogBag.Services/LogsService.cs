@@ -2,6 +2,7 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -17,6 +18,8 @@ namespace LogBag.Services
         Task<long> GetLogCount(string pocket, CancellationToken cancellationToken);
 
         Task<List<LogRowResponse>> GetLogs(string pocket, int page, int pageSize, CancellationToken cancellationToken);
+
+        Task<Dictionary<string, object>?> GetDetails(string pocket, string logId, CancellationToken cancellationToken);
     }
 
     public class LogsService(IMongoService mongoService) : ILogsService
@@ -74,6 +77,17 @@ namespace LogBag.Services
             }
 
             return result;
+        }
+
+        public async Task<Dictionary<string, object>?> GetDetails(string pocket, string logId, CancellationToken cancellationToken)
+        {
+            var collection = mongoService.GetCollection(pocket);
+
+            var item = await collection
+                .Find(Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(logId)))
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return item?.ToDictionary();
         }
     }
 }

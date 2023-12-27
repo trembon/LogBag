@@ -1,0 +1,37 @@
+﻿@page "/pocket/{pocketName}/logs/{logId}"
+@inject HttpClient httpClient
+
+<PageTitle>LogBag - View Log Details</PageTitle>
+
+@code {
+    [Parameter]
+    public string? LogId { get; set; }
+    [Parameter]
+    public string? PocketName { get; set; }
+
+    private async Task<TableData<KeyValuePair<string, object>>> GetLogsData(TableState state)
+    {
+        var url = $"logs/{PocketName}/details/{LogId}";
+
+        var response = await httpClient.GetFromJsonAsync<Dictionary<string, object>>(url);
+
+        return new TableData<KeyValuePair<string, object>>
+            {
+                TotalItems = (int?)response?.Count ?? 0,
+                Items = response?.ToArray() ?? Enumerable.Empty<KeyValuePair<string, object>>()
+            };
+    }
+}
+
+<h1 class="mb-5">Details</h1>
+
+<MudTable Hover="true" LoadingProgressColor="Color.Info" ServerData="GetLogsData">
+    <HeaderContent>
+        <MudTh>Property</MudTh>
+        <MudTh>Value</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Key</MudTd>
+        <MudTd>@context.Value</MudTd>
+    </RowTemplate>
+</MudTable>

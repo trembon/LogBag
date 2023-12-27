@@ -17,5 +17,15 @@ namespace LogBag.Server.Controllers
 
             return Ok(logRows);
         }
+
+        [HttpGet("{pocket}/details/{logId}")]
+        public async Task<IActionResult> GetLogs(string pocket, string logId, CancellationToken cancellationToken = default)
+        {
+            var details = await logsService.GetDetails(pocket, logId, cancellationToken);
+            if (details is null)
+                return NotFound();
+
+            return Ok(details);
+        }
     }
 }
