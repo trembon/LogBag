@@ -13,12 +13,12 @@
     {
         var url = $"logs/{PocketName}/details/{LogId}";
 
-        var response = await httpClient.GetFromJsonAsync<Dictionary<string, object>>(url);
+        var response = await httpClient.GetFromJsonAsync<LogRowResponse>(url);
 
         return new TableData<KeyValuePair<string, object>>
             {
-                TotalItems = (int?)response?.Count ?? 0,
-                Items = response?.ToArray() ?? Enumerable.Empty<KeyValuePair<string, object>>()
+                TotalItems = (int?)response?.Data.Count ?? 0,
+                Items = response?.Data ?? Enumerable.Empty<KeyValuePair<string, object>>()
             };
     }
 }

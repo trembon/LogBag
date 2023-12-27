@@ -8,6 +8,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LogBag.Services
 {
@@ -19,7 +21,7 @@ namespace LogBag.Services
 
         Task<List<LogRowResponse>> GetLogs(string pocket, int page, int pageSize, CancellationToken cancellationToken);
 
-        Task<Dictionary<string, object>?> GetDetails(string pocket, string logId, CancellationToken cancellationToken);
+        Task<LogRowResponse?> GetDetails(string pocket, string logId, CancellationToken cancellationToken);
     }
 
     public class LogsService(IMongoService mongoService) : ILogsService
@@ -79,7 +81,7 @@ namespace LogBag.Services
             return result;
         }
 
-        public async Task<Dictionary<string, object>?> GetDetails(string pocket, string logId, CancellationToken cancellationToken)
+        public async Task<LogRowResponse?> GetDetails(string pocket, string logId, CancellationToken cancellationToken)
         {
             var collection = mongoService.GetCollection(pocket);
 
@@ -87,7 +89,50 @@ namespace LogBag.Services
                 .Find(Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(logId)))
                 .FirstOrDefaultAsync(cancellationToken);
 
-            return item?.ToDictionary();
+            if (item is null)
+                return null;
+
+            LogRowResponse response = new()
+            {
+                Id = item.GetValue(ID_COLUMN).AsObjectId.ToString(),
+                Timestamp = item.GetValue(TIMESTAMP_COLUMN).AsBsonDateTime.ToUniversalTime(),
+                Data = []
+            };
+
+            foreach (var prop in item)
+            {
+                if (prop.Name == ID_COLUMN || prop.Name == TIMESTAMP_COLUMN)
+                    continue;
+
+                ProcessBsonElement(response.Data, null, prop);
+            }
+
+            return response;
+        }
+
+        private void ProcessBsonElement(Dictionary<string, object> data, string? namePrefix, BsonElement doc)
+        {
+            string name = doc.Name;
+            if (!string.IsNullOrEmpty(namePrefix))
+                name = $"{namePrefix}.{name}";
+
+            if (doc.Value.IsBsonDocument)
+            {
+                foreach (var prop in doc.Value.AsBsonDocument)
+                    ProcessBsonElement(data, name, prop);
+            }
+            else if (doc.Value.IsBsonArray)
+            {
+                var array = doc.Value.AsBsonArray;
+                for (int i = 0; i < array.Count; i++)
+                {
+                    //ProcessBsonDocument(data, $"{name}[{i}]", array[i].);
+                }
+            }
+            else
+            {
+                data[name] = doc.Value.AsString;
+            }
         }
     }
 }
