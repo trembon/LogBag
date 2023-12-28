@@ -21,7 +21,7 @@
     private async Task<TableData<LogRowResponse>> GetLogsData(TableState state)
     {
         if (Metadata is null)
-            return new TableData<LogRowResponse>();
+            return new TableData<LogRowResponse>() { TotalItems = 0, Items = [] };
 
         var pageNumber = state.Page == 0 ? 1 : state.Page;
         var url = $"logs/{PocketName}?page={pageNumber}&pageSize={state.PageSize}";
