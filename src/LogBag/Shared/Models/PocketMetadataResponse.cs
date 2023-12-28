@@ -8,6 +8,8 @@ namespace LogBag.Shared.Models
 {
     public class PocketMetadataResponse
     {
+        public required string Name { get; set; }
+
         public required List<string> Columns { get; set; }
 
         public long TotalLogCount { get; set; }

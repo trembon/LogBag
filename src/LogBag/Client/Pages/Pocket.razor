@@ -4,19 +4,25 @@
 
 <PageTitle>LogBag - View Pocket (@PocketName)</PageTitle>
 
-@code {
+    @code {
     [Parameter]
     public string? PocketName { get; set; }
 
+    private MudTable<LogRowResponse> DataTable = null!;
+
     private PocketMetadataResponse? Metadata;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         Metadata = await httpClient.GetFromJsonAsync<PocketMetadataResponse>($"pockets/{PocketName}");
+        await DataTable.ReloadServerData();
     }
 
     private async Task<TableData<LogRowResponse>> GetLogsData(TableState state)
     {
+        if (Metadata is null)
+            return new TableData<LogRowResponse>();
+
         var pageNumber = state.Page == 0 ? 1 : state.Page;
         var url = $"logs/{PocketName}?page={pageNumber}&pageSize={state.PageSize}";
 
@@ -37,7 +43,7 @@
 
 <h1 class="mb-5">Pocket - @PocketName</h1>
 
-<MudTable T="LogRowResponse" Hover="true" LoadingProgressColor="Color.Info" ServerData="GetLogsData" OnRowClick="RowClicked">
+<MudTable @ref="DataTable" T="LogRowResponse" Hover="true" LoadingProgressColor="Color.Info" ServerData="GetLogsData" OnRowClick="RowClicked">
     <HeaderContent>
         <MudTh>Timestamp</MudTh>
         @if (Metadata is not null)
@@ -54,7 +60,10 @@
         {
             foreach (var column in Metadata.Columns)
             {
-                <MudTd DataLabel="@column">@context.Data[column]</MudTd>
+                if(context.Data.TryGetValue(column, out object? value))
+                {
+                    <MudTd DataLabel="@column">@value</MudTd>
+                }
             }
         }
     </RowTemplate>

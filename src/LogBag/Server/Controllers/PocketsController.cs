@@ -23,6 +23,7 @@ namespace LogBag.Server.Controllers
 
             return Ok(new PocketMetadataResponse
             {
+                Name = pocket,
                 Columns = columns,
                 TotalLogCount = logCount
             });
