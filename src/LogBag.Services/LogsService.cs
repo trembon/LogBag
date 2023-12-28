@@ -1,4 +1,5 @@
-﻿using LogBag.Shared.Models;
+﻿using LogBag.Services.Extensions;
+using LogBag.Shared.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
@@ -96,43 +97,10 @@ namespace LogBag.Services
             {
                 Id = item.GetValue(ID_COLUMN).AsObjectId.ToString(),
                 Timestamp = item.GetValue(TIMESTAMP_COLUMN).AsBsonDateTime.ToUniversalTime(),
-                Data = []
+                Data = item.ToFlattenedDictionary([ID_COLUMN, TIMESTAMP_COLUMN])
             };
 
-            foreach (var prop in item)
-            {
-                if (prop.Name == ID_COLUMN || prop.Name == TIMESTAMP_COLUMN)
-                    continue;
-
-                ProcessBsonElement(response.Data, null, prop);
-            }
-
             return response;
-        }
-
-        private void ProcessBsonElement(Dictionary<string, object> data, string? namePrefix, BsonElement doc)
-        {
-            string name = doc.Name;
-            if (!string.IsNullOrEmpty(namePrefix))
-                name = $"{namePrefix}.{name}";
-
-            if (doc.Value.IsBsonDocument)
-            {
-                foreach (var prop in doc.Value.AsBsonDocument)
-                    ProcessBsonElement(data, name, prop);
-            }
-            else if (doc.Value.IsBsonArray)
-            {
-                var array = doc.Value.AsBsonArray;
-                for (int i = 0; i < array.Count; i++)
-                {
-                    //ProcessBsonDocument(data, $"{name}[{i}]", array[i].);
-                }
-            }
-            else
-            {
-                data[name] = doc.Value.AsString;
-            }
         }
     }
 }
