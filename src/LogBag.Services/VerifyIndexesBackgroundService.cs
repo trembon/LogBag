@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LogBag.Services
 {
-    public class VerifyIndexesBackgroundService(IMongoService mongoService) : BackgroundService, IHostedService
+    public class VerifyIndexesBackgroundService(IMongoService mongoService, IConfiguration configuration) : BackgroundService, IHostedService
     {
         private readonly TimeSpan _period = TimeSpan.FromHours(1);
 
@@ -22,6 +23,9 @@ namespace LogBag.Services
                     foreach(var collection in collections)
                     {
                         await mongoService.CreateIndex(collection, LogsService.TIMESTAMP_COLUMN, true, stoppingToken);
+
+                        int retention = int.Parse(configuration["PocketSettings:DefaultRetentionInDays"] ?? "7");
+                        await mongoService.CreateTtlIndex(collection, LogsService.TIMESTAMP_COLUMN, TimeSpan.FromDays(retention), stoppingToken);
                     }
                 }
                 catch

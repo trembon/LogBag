@@ -17,6 +17,8 @@ namespace LogBag.Services
         Task<IEnumerable<string>> GetCollectionNames();
 
         Task CreateIndex(string collectionName, string column, bool descending, CancellationToken cancellationToken);
+
+        Task CreateTtlIndex(string collectionName, string column, TimeSpan expireAfter, CancellationToken cancellationToken);
     }
 
     public class MongoService : IMongoService
@@ -45,11 +47,25 @@ namespace LogBag.Services
         {
             var collection = GetCollection(collectionName);
 
-            var indexDefinition = Builders<BsonDocument>.IndexKeys.Ascending(column);
+            var definition = Builders<BsonDocument>.IndexKeys.Ascending(column);
             if(descending)
-                indexDefinition = Builders<BsonDocument>.IndexKeys.Descending(column);
+                definition = Builders<BsonDocument>.IndexKeys.Descending(column);
 
-            await collection.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(indexDefinition), new CreateOneIndexOptions(), cancellationToken);
+            await collection.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(definition), new CreateOneIndexOptions(), cancellationToken);
+        }
+
+        public async Task CreateTtlIndex(string collectionName, string column, TimeSpan expireAfter, CancellationToken cancellationToken)
+        {
+            var collection = GetCollection(collectionName);
+
+            var definition = Builders<BsonDocument>.IndexKeys.Ascending(column);
+            var options = new CreateIndexOptions<BsonDocument>
+            {
+                ExpireAfter = expireAfter,
+                Name = "ExpireAtIndex"
+            };
+
+            await collection.Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(definition, options), new CreateOneIndexOptions(), cancellationToken);
         }
     }
 }
