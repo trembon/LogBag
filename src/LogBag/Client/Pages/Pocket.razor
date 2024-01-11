@@ -26,13 +26,24 @@
         var pageNumber = state.Page == 0 ? 1 : state.Page;
         var url = $"logs/{PocketName}?page={pageNumber}&pageSize={state.PageSize}";
 
-        var response = await httpClient.GetFromJsonAsync<List<LogRowResponse>>(url);
-
-        return new TableData<LogRowResponse>
+        try
         {
-            TotalItems = (int?)Metadata?.TotalLogCount ?? 0,
-            Items = response ?? Enumerable.Empty<LogRowResponse>()
-        };
+            var response = await httpClient.GetFromJsonAsync<List<LogRowResponse>>(url);
+
+            return new TableData<LogRowResponse>
+            {
+                TotalItems = (int?)Metadata?.TotalLogCount ?? 0,
+                Items = response ?? Enumerable.Empty<LogRowResponse>()
+            };
+        }
+        catch
+        {
+            return new TableData<LogRowResponse>
+            {
+                TotalItems = 0,
+                Items = []
+            };
+        }
     }
 
     private void RowClicked(TableRowClickEventArgs<LogRowResponse> p)

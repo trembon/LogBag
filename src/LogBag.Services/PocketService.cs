@@ -25,7 +25,9 @@ namespace LogBag.Services
         public async Task<List<string>> GetColumns(string pocket, CancellationToken cancellationToken)
         {
             var filter = Builders<BsonDocument>.Filter.Empty;
-            var row = await mongoService.GetCollection(pocket).Find(filter).Limit(1).SingleAsync(cancellationToken);
+            var row = await mongoService.GetCollection(pocket).Find(filter).Limit(1).SingleOrDefaultAsync(cancellationToken);
+            if (row == null)
+                return [];
 
             var dictionary = row.ToDictionary();
 
