@@ -31,18 +31,18 @@
             var response = await httpClient.GetFromJsonAsync<List<LogRowResponse>>(url);
 
             return new TableData<LogRowResponse>
-            {
-                TotalItems = (int?)Metadata?.TotalLogCount ?? 0,
-                Items = response ?? Enumerable.Empty<LogRowResponse>()
-            };
+                {
+                    TotalItems = (int?)Metadata?.TotalLogCount ?? 0,
+                    Items = response ?? Enumerable.Empty<LogRowResponse>()
+                };
         }
         catch
         {
             return new TableData<LogRowResponse>
-            {
-                TotalItems = 0,
-                Items = []
-            };
+                {
+                    TotalItems = 0,
+                    Items = []
+                };
         }
     }
 
@@ -52,7 +52,7 @@
     }
 }
 
-<h1 class="mb-5">Pocket - @PocketName</h1>
+<h1 class="mb-5">Pocket - @PocketName <MudIconButton Href="@($"/pocket/{PocketName}/configure")" Icon="@Icons.Material.Filled.EditNote" aria-label="Configure"></MudIconButton></h1>
 
 <MudTable @ref="DataTable" T="LogRowResponse" Hover="true" LoadingProgressColor="Color.Info" ServerData="GetLogsData" OnRowClick="RowClicked">
     <HeaderContent>
@@ -67,11 +67,11 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Timestamp">@context.Timestamp.ToString("u")</MudTd>
-        @if (Metadata is not null)
+            @if (Metadata is not null)
         {
             foreach (var column in Metadata.Columns)
             {
-                if(context.Data.TryGetValue(column, out object? value))
+                if (context.Data.TryGetValue(column, out object? value))
                 {
                     <MudTd DataLabel="@column">@value</MudTd>
                 }

@@ -1,0 +1,63 @@
+﻿@page "/pocket/{pocketName}/configure"
+@inject HttpClient httpClient
+@inject NavigationManager Navigation
+
+<PageTitle>LogBag - Configure Pocket (@PocketName)</PageTitle>
+
+    @code {
+    [Parameter]
+    public string? PocketName { get; set; }
+
+    private PocketColumnMetadataResponse? Metadata;
+    private List<DropItem> Columns = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Metadata = await httpClient.GetFromJsonAsync<PocketColumnMetadataResponse>($"pockets/{PocketName}/columns");
+
+        // TODO: allow user to create rows and remove them
+        // TODO: mark item if it is suggestion or created, so it can be moved back
+        // TODO: save support
+        Metadata?.ConfiguredColumns?.ForEach(x => Columns.Add(new DropItem { Name = x, Identifier = "Selected" }));
+        Metadata?.ColumnSuggestions?.ForEach(x =>
+        {
+            if(!Columns.Any(c => c.Name == x))
+            {
+                Columns.Add(new DropItem { Name = x, Identifier = "Suggestions" });
+            }
+        });
+    }
+
+    private void ItemUpdated(MudItemDropInfo<DropItem> dropItem)
+    {
+        if (dropItem is not null && dropItem.Item is not null)
+            dropItem.Item.Identifier = dropItem.DropzoneIdentifier;
+    }
+
+    public record DropItem
+    {
+        public required string Name { get; init; }
+        public required string Identifier { get; set; }
+    }
+}
+
+<MudText Typo="Typo.h1">Configure Pocket - @PocketName</MudText>
+
+<MudDivider Class="mb-5 mt-1" />
+
+<MudText Typo="Typo.h2">Columns</MudText>
+<MudText Typo="Typo.subtitle1" GutterBottom>Configure which columns to that will be displayed in the table.</MudText>
+
+<MudDropContainer T="DropItem" Items="Columns" ItemsSelector="@((item, dropzone) => item.Identifier == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
+    <ChildContent>
+        <MudDropZone T="DropItem" Identifier="Selected" AllowReorder Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
+            <MudText Typo="Typo.h6" Class="mb-4">Selected columns</MudText>
+        </MudDropZone>
+        <MudDropZone T="DropItem" Identifier="Suggestions" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
+            <MudText Typo="Typo.h6" Class="mb-4">Column suggestions</MudText>
+        </MudDropZone>
+    </ChildContent>
+    <ItemRenderer>
+        <MudPaper Elevation="25" Class="pa-4 my-4">@context.Name</MudPaper>
+    </ItemRenderer>
+</MudDropContainer>

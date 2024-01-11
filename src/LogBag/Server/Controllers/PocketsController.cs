@@ -19,6 +19,9 @@ namespace LogBag.Server.Controllers
         public async Task<IActionResult> GetPocketMetadata(string pocket, CancellationToken cancellationToken = default)
         {
             var columns = await pocketService.GetColumns(pocket, cancellationToken);
+            if(columns.Count == 0)
+                columns = await pocketService.GetColumnSuggestions(pocket, cancellationToken);
+
             var logCount = await logsService.GetLogCount(pocket, cancellationToken);
 
             return Ok(new PocketMetadataResponse
@@ -26,6 +29,19 @@ namespace LogBag.Server.Controllers
                 Name = pocket,
                 Columns = columns,
                 TotalLogCount = logCount
+            });
+        }
+
+        [HttpGet("{pocket}/columns")]
+        public async Task<IActionResult> GetPocketColumnMetadata(string pocket, CancellationToken cancellationToken = default)
+        {
+            var suggestions = await pocketService.GetColumnSuggestions(pocket, cancellationToken);
+            var configured = await pocketService.GetColumns(pocket, cancellationToken);
+
+            return Ok(new PocketColumnMetadataResponse
+            {
+                ColumnSuggestions = suggestions,
+                ConfiguredColumns = configured
             });
         }
     }

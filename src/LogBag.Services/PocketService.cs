@@ -1,10 +1,7 @@
-﻿using MongoDB.Bson;
+﻿using LogBag.Services.Extensions;
+using LogBag.Services.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LogBag.Services
 {
@@ -12,38 +9,40 @@ namespace LogBag.Services
     {
         Task<IEnumerable<string>> GetPocketNames();
 
+        Task<List<string>> GetColumnSuggestions(string pocket, CancellationToken cancellationToken);
+
         Task<List<string>> GetColumns(string pocket, CancellationToken cancellationToken);
     }
 
     public class PocketService(IMongoService mongoService) : IPocketService
     {
+        private const string CONFIGURATION_COLLECTION = "__pocket_configuration__";
+
         public async Task<IEnumerable<string>> GetPocketNames()
         {
             return await mongoService.GetCollectionNames();
         }
 
-        public async Task<List<string>> GetColumns(string pocket, CancellationToken cancellationToken)
+        public async Task<List<string>> GetColumnSuggestions(string pocket, CancellationToken cancellationToken)
         {
             var filter = Builders<BsonDocument>.Filter.Empty;
             var row = await mongoService.GetCollection(pocket).Find(filter).Limit(1).SingleOrDefaultAsync(cancellationToken);
             if (row == null)
                 return [];
 
-            var dictionary = row.ToDictionary();
+            var dictionary = row.ToFlattenedDictionary([LogsService.ID_COLUMN, LogsService.TIMESTAMP_COLUMN]);
+            return [.. dictionary.Keys];
+        }
 
-            List<string> columns = [];
-            foreach(var kvp in dictionary)
-            {
-                if (kvp.Key == LogsService.ID_COLUMN)
-                    continue;
+        public async Task<List<string>> GetColumns(string pocket, CancellationToken cancellationToken)
+        {
+            var collection = mongoService.GetCollection<PocketConfiguration>(CONFIGURATION_COLLECTION);
 
-                if (kvp.Key == LogsService.TIMESTAMP_COLUMN)
-                    continue;
+            var item = await collection
+                .Find(Builders<PocketConfiguration>.Filter.Eq(x => x.PocketName, pocket))
+                .FirstOrDefaultAsync(cancellationToken);
 
-                columns.Add(kvp.Key);
-            }
-
-            return columns;
+            return item?.ConfiguredColumns ?? [];
         }
     }
 }

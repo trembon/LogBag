@@ -14,6 +14,8 @@ namespace LogBag.Services
     {
         IMongoCollection<BsonDocument> GetCollection(string pocket);
 
+        IMongoCollection<T> GetCollection<T>(string name);
+
         Task<IEnumerable<string>> GetCollectionNames();
 
         Task CreateIndex(string collectionName, string column, bool descending, CancellationToken cancellationToken);
@@ -40,7 +42,12 @@ namespace LogBag.Services
 
         public IMongoCollection<BsonDocument> GetCollection(string name)
         {
-            return _client.GetDatabase(_configuration["MongoDB:DatabaseName"]).GetCollection<BsonDocument>(name);
+            return GetCollection<BsonDocument>(name);
+        }
+
+        public IMongoCollection<T> GetCollection<T>(string name)
+        {
+            return _client.GetDatabase(_configuration["MongoDB:DatabaseName"]).GetCollection<T>(name);
         }
 
         public async Task CreateIndex(string collectionName, string column, bool descending, CancellationToken cancellationToken)
