@@ -1,7 +1,9 @@
 ﻿using LogBag.Services.Extensions;
 using LogBag.Services.Models;
+using LogBag.Shared.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Text.RegularExpressions;
 
 namespace LogBag.Services
 {
@@ -12,6 +14,8 @@ namespace LogBag.Services
         Task<List<string>> GetColumnSuggestions(string pocket, CancellationToken cancellationToken);
 
         Task<List<string>> GetColumns(string pocket, CancellationToken cancellationToken);
+
+        Task SaveConfiguration(string pocket, ConfigurePocketRequest configuration, CancellationToken cancellationToken);
     }
 
     public class PocketService(IMongoService mongoService) : IPocketService
@@ -43,6 +47,31 @@ namespace LogBag.Services
                 .FirstOrDefaultAsync(cancellationToken);
 
             return item?.ConfiguredColumns ?? [];
+        }
+
+        public async Task SaveConfiguration(string pocket, ConfigurePocketRequest configuration, CancellationToken cancellationToken)
+        {
+            var collection = mongoService.GetCollection<PocketConfiguration>(CONFIGURATION_COLLECTION);
+
+            var filter = Builders<PocketConfiguration>.Filter.Eq(x => x.PocketName, pocket);
+            var item = await collection
+                .Find(filter)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if(item == null)
+            {
+                PocketConfiguration insert = new()
+                {
+                    PocketName = pocket,
+                    ConfiguredColumns = configuration.Columns
+                };
+                await collection.InsertOneAsync(insert, null, cancellationToken);
+            }
+            else
+            {
+                var update = Builders<PocketConfiguration>.Update.Set(x => x.ConfiguredColumns, configuration.Columns);
+                await collection.UpdateOneAsync(filter, update, null,cancellationToken);
+            }
         }
     }
 }

@@ -1,12 +1,13 @@
 ﻿@page "/pocket/{pocketName}/configure"
 @inject HttpClient httpClient
-@inject NavigationManager Navigation
 
 <PageTitle>LogBag - Configure Pocket (@PocketName)</PageTitle>
 
     @code {
     [Parameter]
     public string? PocketName { get; set; }
+
+    private bool HasChanges = false;
 
     private PocketColumnMetadataResponse? Metadata;
     private List<DropItem> Columns = new();
@@ -18,12 +19,22 @@
         // TODO: allow user to create rows and remove them
         // TODO: mark item if it is suggestion or created, so it can be moved back
         // TODO: save support
-        Metadata?.ConfiguredColumns?.ForEach(x => Columns.Add(new DropItem { Name = x, Identifier = "Selected" }));
+
         Metadata?.ColumnSuggestions?.ForEach(x =>
         {
-            if(!Columns.Any(c => c.Name == x))
+            Columns.Add(new DropItem { Name = x, Identifier = "Suggestions", IsSuggestion = true });
+        });
+
+        Metadata?.ConfiguredColumns?.ForEach(x =>
+        {
+            var column = Columns.FirstOrDefault(c => c.Name == x);
+            if (column != null)
             {
-                Columns.Add(new DropItem { Name = x, Identifier = "Suggestions" });
+                column.Identifier = "Selected";
+            }
+            else
+            {
+                Columns.Add(new DropItem { Name = x, Identifier = "Selected", IsSuggestion = false });
             }
         });
     }
@@ -31,19 +42,34 @@
     private void ItemUpdated(MudItemDropInfo<DropItem> dropItem)
     {
         if (dropItem is not null && dropItem.Item is not null)
+        {
             dropItem.Item.Identifier = dropItem.DropzoneIdentifier;
+            HasChanges = true;
+        }
+    }
+
+    private async Task SaveChanges()
+    {
+        ConfigurePocketRequest request = new();
+        request.Columns = Columns.Where(x => x.Identifier == "Selected").Select(x => x.Name).ToList();
+
+        var response = await httpClient.PostAsJsonAsync($"pockets/{PocketName}", request);
+        response.EnsureSuccessStatusCode();
+
+        HasChanges = false;
     }
 
     public record DropItem
     {
         public required string Name { get; init; }
         public required string Identifier { get; set; }
+        public required bool IsSuggestion { get; init; }
     }
 }
 
 <MudText Typo="Typo.h1">Configure Pocket - @PocketName</MudText>
 
-<MudDivider Class="mb-5 mt-1" />
+<MudDivider Class="mb-5 mt-2" />
 
 <MudText Typo="Typo.h2">Columns</MudText>
 <MudText Typo="Typo.subtitle1" GutterBottom>Configure which columns to that will be displayed in the table.</MudText>
@@ -61,3 +87,7 @@
         <MudPaper Elevation="25" Class="pa-4 my-4">@context.Name</MudPaper>
     </ItemRenderer>
 </MudDropContainer>
+
+    <MudPaper Class="pa-4 ma-2 d-flex justify-end flex-grow-1 gap-4">
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" Size="Size.Small" Disabled=(!HasChanges) OnClick="SaveChanges">Save changes</MudButton>
+    </MudPaper>

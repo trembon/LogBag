@@ -32,6 +32,13 @@ namespace LogBag.Server.Controllers
             });
         }
 
+        [HttpPost("{pocket}")]
+        public async Task<IActionResult> ConfigurePocket([FromRoute] string pocket, [FromBody] ConfigurePocketRequest data, CancellationToken cancellationToken = default)
+        {
+            await pocketService.SaveConfiguration(pocket, data, cancellationToken);
+            return Ok();
+        }
+
         [HttpGet("{pocket}/columns")]
         public async Task<IActionResult> GetPocketColumnMetadata(string pocket, CancellationToken cancellationToken = default)
         {

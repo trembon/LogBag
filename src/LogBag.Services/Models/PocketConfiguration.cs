@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LogBag.Services.Models
 {
-    internal class PocketConfiguration
+    internal class PocketConfiguration : BaseMongoDocument
     {
         public required string PocketName { get; set; }
 
