@@ -9,7 +9,7 @@ namespace LogBag.Services
 {
     public interface IPocketService
     {
-        Task<IEnumerable<string>> GetPocketNames();
+        Task<List<string>> GetPocketNames();
 
         Task<List<string>> GetColumnSuggestions(string pocket, CancellationToken cancellationToken);
 
@@ -22,9 +22,10 @@ namespace LogBag.Services
     {
         private const string CONFIGURATION_COLLECTION = "__pocket_configuration__";
 
-        public async Task<IEnumerable<string>> GetPocketNames()
+        public async Task<List<string>> GetPocketNames()
         {
-            return await mongoService.GetCollectionNames();
+            var names = await mongoService.GetCollectionNames();
+            return names.Where(x => x != CONFIGURATION_COLLECTION).ToList();
         }
 
         public async Task<List<string>> GetColumnSuggestions(string pocket, CancellationToken cancellationToken)
