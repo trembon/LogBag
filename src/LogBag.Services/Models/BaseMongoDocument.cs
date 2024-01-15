@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace LogBag.Services.Models
 {
     internal class BaseMongoDocument
     {
-        public object? Id { get; set; }
+        public ObjectId? Id { get; set; }
     }
 }
